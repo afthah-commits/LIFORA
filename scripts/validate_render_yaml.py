@@ -26,10 +26,11 @@ def validate():
     assert backend is not None, "lifora-backend not found"
     assert backend['type'] == 'web', f"Expected backend type 'web', got {backend['type']}"
     assert backend['runtime'] == 'python', f"Expected runtime 'python', got {backend['runtime']}"
-    assert 'pip install -r backend/requirements.txt' in backend['buildCommand']
+    assert backend['plan'] == 'free', f"Expected backend plan 'free', got {backend.get('plan')}"
+    assert 'preDeployCommand' not in backend, "preDeployCommand must be removed for free tier compatibility"
+    assert 'pip install -r backend/requirements.txt && python -m alembic upgrade head' in backend['buildCommand']
     assert 'uvicorn backend.app.main:app' in backend['startCommand']
-    assert 'python -m alembic upgrade head' in backend['preDeployCommand']
-    print(f"[OK] Backend validated: {backend['name']} (type: {backend['type']}, runtime: {backend['runtime']})")
+    print(f"[OK] Backend validated: {backend['name']} (type: {backend['type']}, plan: {backend['plan']}, build: {backend['buildCommand']})")
 
     # 2.2 Frontend Static Web Service (Render Official: type: web, runtime: static)
     frontend = next((s for s in services if s['name'] == 'lifora-frontend'), None)
