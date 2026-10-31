@@ -4,10 +4,6 @@ import os
 import re
 import uuid
 from datetime import date as dt_date, timedelta
-from typing import Any
-
-import cv2
-import numpy as np
 from PIL import Image
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -195,7 +191,7 @@ class ScreenTimeOcrService:
         return dt_date.today()
 
     @classmethod
-    def preprocess_image(cls, file_bytes: bytes) -> tuple[np.ndarray, str]:
+    def preprocess_image(cls, file_bytes: bytes) -> tuple[object, str]:
         # Compute sha256 hash
         hash_sha256 = hashlib.sha256(file_bytes).hexdigest()
 
@@ -204,18 +200,20 @@ class ScreenTimeOcrService:
         if pil_img.mode != "RGB":
             pil_img = pil_img.convert("RGB")
 
-        # Convert to numpy array for OpenCV
-        img_np = np.array(pil_img)
-
-        # Resize if width > 1600 while maintaining aspect ratio
-        h, w = img_np.shape[:2]
+        w, h = pil_img.size
         if w > 1600:
             scale = 1600.0 / w
             new_w = 1600
             new_h = int(h * scale)
-            img_np = cv2.resize(img_np, (new_w, new_h), interpolation=cv2.INTER_AREA)
+            pil_img = pil_img.resize((new_w, new_h), Image.Resampling.LANCZOS)
 
-        return img_np, hash_sha256
+        try:
+            import numpy as np
+
+            img_np = np.array(pil_img)
+            return img_np, hash_sha256
+        except ImportError:
+            return pil_img, hash_sha256
 
     @classmethod
     async def process_screenshot_upload(
@@ -247,7 +245,17 @@ class ScreenTimeOcrService:
         ext = os.path.splitext(original_filename)[1] or ".jpg"
         save_filename = f"screentime_{uuid.uuid4()}{ext}"
         save_path = os.path.join(settings.UPLOAD_DIR, save_filename)
-        cv2.imwrite(save_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
+        try:
+            import cv2
+            import numpy as np
+
+            if isinstance(img_np, np.ndarray):
+                cv2.imwrite(save_path, cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
+            else:
+                img_np.save(save_path)
+        except Exception:
+            pil_fallback = Image.open(io.BytesIO(file_bytes))
+            pil_fallback.save(save_path)
 
         # Run OCR Engine
         ocr = get_ocr_engine()
