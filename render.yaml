@@ -3,16 +3,15 @@
 # Infrastructure: Managed PostgreSQL + FastAPI Web Service + React Static Site
 
 databases:
-  # LIFORA Managed Database
+  # LIFORA Managed PostgreSQL Database
   - name: lifora-db
     databaseName: lifora_db
     user: lifora_user
     region: singapore
-    plan: free # Change to 'starter' for higher memory, automated daily backups & high concurrency
-    ipAllowList: [] # Kept internal to Render network by default for maximum security
+    plan: free # Change to 'starter' for permanent storage, automated daily backups & high concurrency
 
 services:
-  # 1. LIFORA Backend API Service (Python FastAPI)
+  # 1. LIFORA Backend API Service (Python FastAPI Web Service)
   - type: web
     name: lifora-backend
     runtime: python
@@ -64,7 +63,7 @@ services:
         value: noreply@lifora.app
 
   # 2. LIFORA Frontend Application (React + Vite Static Site)
-  - type: static_site
+  - type: static
     name: lifora-frontend
     rootDir: frontend
     buildCommand: npm install && npm run build
