@@ -74,7 +74,7 @@ def get_local_db_url() -> str:
                     return normalize_sync_url(line.split("=", 1)[1].strip().strip('"').strip("'"))
                 if line.startswith("DATABASE_URL=") and "SYNC_DATABASE_URL=" not in line:
                     return normalize_sync_url(line.split("=", 1)[1].strip().strip('"').strip("'"))
-    return "postgresql://postgres:x7eqpUhLEaKTP7N840InEkngi9OuikI7@localhost:5432/fitpulse_db"
+    return os.getenv("LOCAL_DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/fitpulse_db")
 
 
 def verify_tables(local_conn, remote_conn) -> dict[str, tuple[int, int]]:
