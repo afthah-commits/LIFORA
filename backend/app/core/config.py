@@ -13,32 +13,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fitpulse_db"
-    SYNC_DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/fitpulse_db"
-
-    @field_validator("DATABASE_URL", mode="before")
-    @classmethod
-    def assemble_database_url(cls, v: str) -> str:
-        if not v:
-            return v
-        if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql+asyncpg://", 1)
-        if v.startswith("postgresql://") and not v.startswith("postgresql+"):
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        return v
-
-    @field_validator("SYNC_DATABASE_URL", mode="before")
-    @classmethod
-    def assemble_sync_database_url(cls, v: str | None) -> str:
-        if v and v.strip():
-            if v.startswith("postgres://"):
-                return v.replace("postgres://", "postgresql+psycopg2://", 1)
-            if v.startswith("postgresql://") and not v.startswith("postgresql+"):
-                return v.replace("postgresql://", "postgresql+psycopg2://", 1)
-            if v.startswith("postgresql+asyncpg://"):
-                return v.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
-            return v
-        return ""
+    DATABASE_URL: str = ""
+    SYNC_DATABASE_URL: str = ""
 
     # Security & JWT
     SECRET_KEY: str = "fitpulse-super-secret-production-key-must-be-min-32-chars-long"
@@ -105,13 +81,46 @@ class Settings(BaseSettings):
         elif self.ENVIRONMENT and not self.APP_ENV:
             self.APP_ENV = self.ENVIRONMENT
 
-        # Automatically derive SYNC_DATABASE_URL from DATABASE_URL if not explicitly set
-        if not self.SYNC_DATABASE_URL and self.DATABASE_URL:
-            self.SYNC_DATABASE_URL = (
-                self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
-                .replace("postgres://", "postgresql+psycopg2://", 1)
-                .replace("postgresql://", "postgresql+psycopg2://", 1)
-            )
+        is_prod = self.ENVIRONMENT.lower() == "production" or self.APP_ENV.lower() == "production"
+
+        # Fail fast in production if DATABASE_URL is missing or defaulting to localhost
+        if is_prod:
+            env_db = os.environ.get("DATABASE_URL", "")
+            if not self.DATABASE_URL or not env_db or "localhost" in self.DATABASE_URL or "127.0.0.1" in self.DATABASE_URL:
+                raise RuntimeError(
+                    "DATABASE_URL environment variable is required in production but was not provided (or points to localhost). "
+                    "Ensure Render has properly linked the PostgreSQL database to lifora-backend."
+                )
+
+        # In development/test mode, fall back to local database if unconfigured
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/fitpulse_db"
+            self.SYNC_DATABASE_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/fitpulse_db"
+            return self
+
+        # Normalize DATABASE_URL for async engine (asyncpg)
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        self.DATABASE_URL = url
+
+        # Derive or normalize SYNC_DATABASE_URL for sync migrations (psycopg2)
+        # If SYNC_DATABASE_URL was not set or if in production it still points to localhost while DATABASE_URL does not:
+        if not self.SYNC_DATABASE_URL or (is_prod and "localhost" in self.SYNC_DATABASE_URL and "localhost" not in url):
+            sync_url = url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+            sync_url = sync_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            self.SYNC_DATABASE_URL = sync_url
+        else:
+            s_url = self.SYNC_DATABASE_URL
+            if s_url.startswith("postgres://"):
+                s_url = s_url.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif s_url.startswith("postgresql://") and not s_url.startswith("postgresql+"):
+                s_url = s_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            elif s_url.startswith("postgresql+asyncpg://"):
+                s_url = s_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+            self.SYNC_DATABASE_URL = s_url
 
         # Ensure FRONTEND_URL is in CORS_ORIGINS
         if self.FRONTEND_URL and isinstance(self.CORS_ORIGINS, list):

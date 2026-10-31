@@ -21,8 +21,19 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 def get_url():
-    # Use sync database url for alembic migrations
-    return settings.SYNC_DATABASE_URL
+    # Priority: settings.SYNC_DATABASE_URL or direct DATABASE_URL from environment
+    url = settings.SYNC_DATABASE_URL or os.environ.get("DATABASE_URL") or ""
+    if not url:
+        raise RuntimeError("No database URL found for Alembic migrations. Please configure DATABASE_URL.")
+
+    # Ensure sync driver (psycopg2) for Alembic migrations:
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    elif url.startswith("postgresql+asyncpg://"):
+        url = url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+    return url
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
