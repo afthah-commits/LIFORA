@@ -100,24 +100,6 @@ Double-click `stop-lifora.bat` or run:
 ```bat
 stop-lifora.bat
 ```
-
----
-
-## 🌐 Localhost URLs & Endpoints
-
-| Service / View | URL | Purpose |
-| :--- | :--- | :--- |
-| **LIFORA Web App** | `http://localhost:5173` | Main personal life management app |
-| **Customization Center** | `http://localhost:5173/customization` | Visual app & module builder |
-| **Backend Health** | `http://localhost:8000/health` | FastAPI health status check |
-| **API Documentation** | `http://localhost:8000/api/v1/docs` | Interactive Swagger API docs |
-| **Alternative Docs** | `http://localhost:8000/api/v1/redoc` | ReDoc API specification |
-
-### Default Credentials (Seed Account)
-- **Email:** `user@fitpulse.ai`
-- **Password:** `fitpulse123`
-*(Or click "Create Account" on the login screen to register a new personal account).*
-
 ---
 
 ## 🧪 Testing & Verification Suite
