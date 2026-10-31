@@ -1,10 +1,19 @@
 # LIFORA — Personal Life Operating System
 
-> **Tagline:** Your Life. Your Space. Your Rules.
+> **Tagline:** *Your Life. Your Space. Your Rules.*
+
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![PWA](https://img.shields.io/badge/Mobile-PWA%20Installable-5A0FC8?style=flat&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+[![Render](https://img.shields.io/badge/Deploy-Render%20Blueprint-46E3B7?style=flat&logo=render&logoColor=black)](https://render.com)
 
 **LIFORA** is a unified personal life operating system where you can manage your entire daily life through customizable modules, visual dashboard editors, dynamic navigation, workflows, and personal analytics.
 
 Pairs a high-performance **FastAPI** backend with a modern dark emerald-themed **React + TypeScript + Vite** PWA frontend, backed by a persistent **PostgreSQL** database.
+
+📖 **Deployment Guide:** [RENDER_DEPLOYMENT_GUIDE.md](RENDER_DEPLOYMENT_GUIDE.md) — Complete 1-click Render blueprint and safe data migration procedure.
 
 ---
 
