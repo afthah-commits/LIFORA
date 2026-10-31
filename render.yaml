@@ -62,12 +62,13 @@ services:
       - key: SMTP_FROM_EMAIL
         value: noreply@lifora.app
 
-  # 2. LIFORA Frontend Application (React + Vite Static Site)
-  - type: static
+  # 2. LIFORA Frontend Application (React + Vite Static Site on Render)
+  - type: web
     name: lifora-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    staticPublishPath: ./dist
     autoDeploy: false
     envVars:
       - key: VITE_API_BASE_URL
